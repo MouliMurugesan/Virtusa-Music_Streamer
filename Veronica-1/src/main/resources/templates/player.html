@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="https://kit.fontawesome.com/797356307c.js"></script>
+	<meta charset="utf-8">
+	<link rel="stylesheet" th:href="@{/playerstyle.css}"></link>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	
+	
+	<title th:text="${pagetitle}"></title>
+
+
+</head>
+<body>
+	<div><audio  src="" id="play"></audio></div>
+<div class="left">
+<div id="sidebar">
+    <div class="toggle-btn" ><a>
+   <span></span>
+   <span></span>
+   <span></span>
+  </a>
+    </div>
+    <div class="barlist">
+  <a href="/player">Home</a>
+      <a href="/userprofile">Profile</a>
+      <a href="/favorite">Favourite</a>
+      <div sec:authorize="hasRole('ROLE_ADMIN')">
+     <a href="/uploadsongs">Upload Song</a>
+      </div>
+      <div class="lan">
+      <a href="#">Choose Language</a>
+        <div class="lan-con">
+      <a th:href="@{'/getlanguage/'+Tamil}" >Tamil</a>
+      <a th:href="@{'/getlanguage/'+English}" >English</a>
+       <a th:href="@{'/getlanguage/'+Malayalam}" >Malayalam</a>
+       <a th:href="@{'/getlanguage/'+Kannada}" >Kannada</a>
+      </div></div>
+      <div class="genres">
+    	<a href="#">Genres</a>
+    	 <div class="genres-con">
+    	 <a th:href="@{'/userGenres/'+General}" >General</a>
+     <a th:href="@{'/userGenres/'+Fock}" >Fock</a>
+       <a th:href="@{'/userGenres/'+HipHop}" >Hip Hop</a>
+      <a th:href="@{'/userGenres/'+Rock}" >Rock</a>
+      <a th:href="@{'/userGenres/'+Classical}" >Classical</a>
+    	 </div></div>
+    	 <div class="playlist">
+    	 <a href="#">PlayList</a>
+    	 <div class="playlist-con">
+    	 <a href="#" class="createplaylist">Create Playlist</a>
+    	 <div th:each="playlist:${playlist}" >
+    	 
+    	 <a th:href="@{'/playlist/'+${playlist.id}}" th:text="${playlist.playListName}" class="barpl"></a> <div class="deleteplaylist"><a th:href="@{'/deleteplaylist/'+${playlist.id}}" >Delete</a></div>
+    	 </div></div></div>
+    	<a href="/userHistory">History</a>
+      <a th:href="@{'/logout'}">LogOut</a>
+    </div>
+  </div>
+   <div class="title">Veronica</div>
+   <p id="songname"></p>
+   <div class="progress" id="pb">
+	<div id="bar">
+		<p class="percent"></p>
+	</div>
+</div>
+<div id="time">00:00/00:00</div>
+  <div id ="media">
+    <div id="backbutton" class="back"><i class="material-icons" style="font-size:48px">skip_previous</i></div>
+  <div class="buttons button--play" id="playbutton">
+	<div class="button__shape button__shape--one"></div>
+	<div class="button__shape button__shape--two"></div>
+</div>
+  
+  <div  id="nextbutton" class="next"><i class="material-icons" style="font-size:48px">skip_next</i></div>
+</div>
+<div id="repeat" class="repeat"><i class="material-icons">repeat</i></div>
+  <div id="shuffle" class="shuffle"><i class="material-icons">shuffle</i></div>
+<div class="popup">
+    <span class="helper"></span>
+    <div>
+        <div class="popupCloseButton">&times;</div>
+        <form th:action="@{/createplaylist}" method="post">
+  <div class="textbox">
+  <input type="text" placeholder="Enter PlayList name" name="playlistname" required>
+    
+</div>
+ 
+
+<button class="btns"type="submit">Create</button></form>
+    </div>
+</div>
+
+  </div>
+  
+  <div class="right">
+  <div class="vl"></div>
+  	<input type="text" id="myInput"  placeholder="Search for song...." title="Type in a name">
+  	<div id="listtitle" th:text="${listtitle}"></div>
+ <ul th:each ="player:${player}" id="pl">
+
+ 	<li class="container" ><i id="btn"  class="far fa-heart" th:onclick="'userSelectFavorite(\''+${player.id}+'\');'"></i> <a class="current-song"  th:href="@{'/getallmusic/'+${player.id}}" th:text="${player.name}" id="al"></a><div class="test"id="test">
+          <div class="dotmenu">
+        <div class="playlst"><a href="#" >Add to Playlist</a>
+        <div class="addplaylist-con" >
+        <div th:each="playlist:${playlist}">
+           <a href="#" th:text="${playlist.playListName}" th:onclick="'addtoplaylist(\''+${player.id}+'\',\''+${playlist.id}+'\');'"></a>
+        </div></div></div>
+        <a th:href="@{'/getallmusic/'+${player.id}}"  th:download="${player.name}">Download</a>
+      </div></div></li>
+      
+ </ul>
+
+  </div>
+  <script>
+  var myfavsong;
+  var currentSong=0;
+  var historycheck=0;
+audioPlayer();
+function audioPlayer()
+{
+	
+	
+	var currentTime=document.getElementById("time");
+	$("#play")[0].src=$("#pl li #al")[0];
+	
+	$("#pl li").removeClass("current-song");
+	$("#pl li ").eq(currentSong).addClass("current-song");
+	document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+	var totaltime=Math.round($("#play")[0].duration);
+	var tmin=Math.floor(totaltime/60);
+	var tsec=totaltime % 60;
+	tmin=(tmin<10)?"0"+tmin:tmin;
+	tsec=(tsec<10)?"0"+tsec:tsec;
+	currentTime.textContent+="/"+tmin +":"+tsec;
+	$("#playbutton").click(function(e){
+		if($("#play")[0].paused==false)
+			{
+		$("#play")[0].pause();
+		$("#playbutton").removeClass("button--active");
+			}
+		else
+			{
+			$("#play")[0].play();
+			$("#playbutton").addClass("button--active");      
+			history($("#pl li #al").eq(currentSong).text().trim());
+			}
+	});
+	$("#backbutton").click(function(e){
+		if(currentSong!=0)
+			{
+			currentSong=currentSong-1;
+			$("#pl li").removeClass("current-song");
+			$("#pl li ").eq(currentSong).addClass("current-song");
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+			$("#playbutton").addClass("button--active");      
+			$("#pl li ")[currentSong].scrollIntoView();			
+			history($("#pl li #al").eq(currentSong).text().trim());
+				}
+			
+	});
+	$("#nextbutton").click(function(e){
+		
+		if(currentSong!=$("#pl li #al").length-1)
+			{
+			
+			currentSong++;
+			$("#pl li").removeClass("current-song");
+			$("#pl li ").eq(currentSong).addClass("current-song");
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+			$("#playbutton").addClass("button--active");      
+			$("#pl li ")[currentSong].scrollIntoView();
+			history($("#pl li #al").eq(currentSong).text().trim());
+			
+				}
+			
+	});
+	$("#play")[0].addEventListener("timeupdate", function(){
+		var posi=$("#play")[0].currentTime/$("#play")[0].duration;
+	
+		bar.style.width=posi*100+'%';
+		convertTime(Math.round($("#play")[0].currentTime));
+	});
+	function convertTime(seconds)
+	{
+		var min=Math.floor(seconds/60);
+		var sec=seconds % 60;
+		min=(min<10)?"0"+min:min;
+		sec=(sec<10)?"0"+sec:sec;
+		currentTime.textContent=min +":"+sec;
+		var totaltime=Math.round($("#play")[0].duration);
+		var tmin=Math.floor(totaltime/60);
+		var tsec=totaltime % 60;
+		tmin=(tmin<10)?"0"+tmin:tmin;
+		tsec=(tsec<10)?"0"+tsec:tsec;
+		currentTime.textContent+="/"+tmin +":"+tsec;
+		
+	}
+	$("#pl li #al").click(function(e){
+		e.preventDefault();
+		$("#play")[0].src=this;
+		$("#play")[0].play();
+		$("#pl li").removeClass("current-song");
+		currentSong=$("#pl li #al").index(this);
+		$(this).parent().addClass("current-song");
+		$("#playbutton").addClass("button--active");     
+		document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+		history($("#pl li #al").eq(currentSong).text().trim());
+	});
+	$("#play")[0].addEventListener("ended", function(){
+		if($("#repeat").hasClass("green"))
+			{
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			}
+		else if($("#shuffle").hasClass("green"))
+			{
+			currentSong=Math.floor((Math.random() * $("#pl li #al").length-1) + 1);
+			$("#pl li").removeClass("current-song");
+			$("#pl li ").eq(currentSong).addClass("current-song");
+			document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			$("#pl li ")[currentSong].scrollIntoView();
+			history($("#pl li #al").eq(currentSong).text().trim());
+			}
+		else
+			{
+		currentSong++;
+		if(currentSong == $("#pl li #al").length)
+			{
+			currentSong=0;
+			}
+		
+		$("#pl li").removeClass("current-song");
+		$("#pl li ").eq(currentSong).addClass("current-song");
+		$("#play")[0].src=$("#pl li #al")[currentSong].href;
+		$("#play")[0].play();
+		document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+		$("#pl li ")[currentSong].scrollIntoView();
+		history($("#pl li #al").eq(currentSong).text().trim());
+			}
+		});
+	Bar  = document.getElementById('pb');
+	Bar.addEventListener("click", seek);
+
+	function seek(e) {
+	var percent1 = e.offsetX / this.offsetWidth;
+	$("#play")[0].currentTime=percent1*$("#play")[0].duration;
+	var posi=$("#play")[0].currentTime/$("#play")[0].duration;
+	
+	bar.style.width=posi*100+'%';
+	}
+	}
+$(document).ready(function(){
+	$.ajax({
+		type : "GET",
+		url : "/getuserfav",
+		dataType : "json"
+  
+		}).done(function(userfavorite){
+			for(var ind=0;ind<$("#pl li ").length;ind++)
+				{
+				var lst=$("#pl li #al").eq(ind).text().trim() ;
+				for(var jind=0;jind<userfavorite.length;jind++)
+					{
+					var song=userfavorite[jind];
+					song.songName;
+					if(lst==song.songName)
+						{
+						$("#pl li #btn").eq(ind).removeClass("far");
+						$("#pl li #btn").eq(ind).addClass("fas");
+						break;
+						}
+					}
+				}
+			})
+
+	
+			
+	
+});
+$("#pl li #btn").click(function(e){
+var currentlike=$("#pl li #btn").index(this);
+if($("#pl li #btn").eq(currentlike).hasClass("far"))
+{
+	
+	$(this).removeClass("far");
+	$(this).addClass("fas");
+
+} else
+{
+	$(this).removeClass("fas");
+	$(this).addClass("far");
+}
+});
+function userSelectFavorite(id)
+{
+	$.ajax({
+		type : "GET",
+		url : "/userFavorite/"+id
+		
+});
+	 
+}
+function history(song)
+{
+	$.ajax({
+		type : "GET",
+		url : "/storehistory/"+song
+	});
+	}
+	 $("#myInput").on("keyup", function() {
+		    var value = $(this).val().toLowerCase();
+		    $("#pl li").filter(function() {
+		      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+		    });
+		  });
+	 $(".repeat").click(function () {
+		  
+		   $(this).toggleClass("green");
+
+		});
+	 $(".shuffle").click(function(){
+		 $(this).toggleClass("green");	}
+		 );
+	 $(".createplaylist").click(function(){
+	       $('.popup').show();
+	    });
+	    $('.popupCloseButton').click(function(){
+	        $('.popup').hide();
+	    });
+	    $('.toggle-btn').click(function(e){
+	        e.stopPropagation();
+	          $('#sidebar').toggleClass("active");
+	      });
+	    $('#pl li .test').click(function(e){
+	        e.stopPropagation();
+	          $('#pl li .dotmenu').eq($("#pl li .test").index(this)).toggleClass("dis");
+	      });
+	  $(document).click(function (event) {            
+	      if($("#sidebar").hasClass("active"))
+	      {
+	        $("#sidebar").removeClass("active");
+	      }
+	      if($(".dotmenu").hasClass("dis"))
+	      {
+	        $(".dotmenu").removeClass("dis");
+	      }
+	  });
+	  function addtoplaylist(songid,plid)
+	  {
+		  $.ajax({
+				type : "GET",
+				url : "/addtoplatlist/"+songid+"/"+plid
+				
+		}).done(function(e){
+			alert("Successfully added to playlist");
+		});
+	  }
+</script>
+</body>
+</html>

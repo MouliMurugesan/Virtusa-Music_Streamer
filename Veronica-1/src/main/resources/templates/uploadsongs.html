@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+	<script src="https://kit.fontawesome.com/797356307c.js"></script>
+	<meta charset="utf-8">
+	<link rel="stylesheet" th:href="@{/uploadsong.css}"></link>
+	<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+	
+	<title>Upload Song</title>
+
+
+</head>
+<body>
+	<div><audio  src="" id="play"></audio></div>
+<div class="left">
+<div id="sidebar">
+    <div class="toggle-btn" onclick="toggleSidebar()"><a>
+   <span></span>
+   <span></span>
+   <span></span>
+  </a>
+    </div>
+   <div class="barlist">
+  <a href="/player">Home</a>
+      <a href="/userprofile">Profile</a>
+      <a href="/favorite">Favourite</a>
+      <div sec:authorize="hasRole('ROLE_ADMIN')">
+     <a href="/uploadsongs">Upload Song</a>
+      </div>
+      <div class="lan">
+      <a href="#">Choose Language</a>
+        <div class="lan-con">
+      <a th:href="@{'/getlanguage/'+Tamil}" >Tamil</a>
+      <a th:href="@{'/getlanguage/'+English}" >English</a>
+       <a th:href="@{'/getlanguage/'+Malayalam}" >Malayalam</a>
+       <a th:href="@{'/getlanguage/'+Kannada}" >Kannada</a>
+      </div></div>
+      <div class="genres">
+    	<a href="#">Genres</a>
+    	 <div class="genres-con">
+    	 <a th:href="@{'/userGenres/'+General}" >General</a>
+     <a th:href="@{'/userGenrese/'+Fock}" >Fock</a>
+       <a th:href="@{'/userGenres/'+HipHop}" >Hip Hop</a>
+      <a th:href="@{'/userGenres/'+Rock}" >Rock</a>
+      <a th:href="@{'/userGenres/'+Classical}" >Classical</a>
+    	 </div></div>
+    	<a href="/userHistory">History</a>
+      <a th:href="@{'/logout'}">LogOut</a>
+    </div>
+  </div>
+   <div class="title">Veronica</div>
+   <form id="upload" name="upload" method="post" th:action=@{/uploadsongs} enctype="multipart/form-data">
+   
+   <div class="login-box">
+   <div class="textbox">
+    <input type="file"  name="files" accept=".mp3" required multiple> <select name="language" required >
+    	<option value=""> Choose Language</option>
+    	<option value="Tamil">Tamil</option>
+    	<option value="English">English</option>
+    	<option value="Malayalam">Malayalam</option>
+    	<option value="Kannada">Kannada</option>
+    </select>
+    <select name="genres" required >
+    	<option value=""> Choose Genres</option>
+    	<option value="General">General</option>
+    	<option value="Fock">Fock</option>
+    	<option value="HipHop">Hip Hop</option>
+    	<option value="Rock">Rock</option>
+    	<option value="Classical">Classical</option>
+    </select>
+</div>
+<button class="up"type="submit">Upload</button></div></form>
+   <p id="songname"></p>
+   <div class="progress" id="pb">
+	<div id="bar">
+		<p class="percent"></p>
+	</div>
+</div>
+<div id="time">00:00/00:00</div>
+   <div id ="media">
+    <div id="backbutton" class="back"><i class="material-icons" style="font-size:48px">skip_previous</i></div>
+  <div class="buttons button--play" id="playbutton">
+	<div class="button__shape button__shape--one"></div>
+	<div class="button__shape button__shape--two"></div>
+</div>
+  
+  <div  id="nextbutton" class="next"><i class="material-icons" style="font-size:48px">skip_next</i></div>
+</div>
+<div id="repeat" class="repeat"><i class="material-icons">repeat</i></div>
+  <div id="shuffle" class="shuffle"><i class="material-icons">shuffle</i></div>
+  </div>
+  
+  <div class="right">
+  <div class="vl"></div>
+  	<input type="text" id="myInput"  placeholder="Search for song...." title="Type in a name">
+ <ul th:each ="player:${player}" id="pl">
+
+ 	<li class="container"><i id="btn"  class="far fa-heart" th:onclick="'userSelectFavorite(\''+${player.id}+'\');'"></i> <a class="current-song"  th:href="@{'/getallmusic/'+${player.id}}" th:text="${player.name}" id="al"></a><a th:href="@{'/removeSong/'+${player.id}}" id="download" >✖</a></li>
+ </ul>
+
+  </div>
+  <script>
+  var myfavsong;
+  var currentSong=0;
+  var historycheck=0;
+audioPlayer();
+function audioPlayer()
+{
+	
+	
+	var currentTime=document.getElementById("time");
+	$("#play")[0].src=$("#pl li #al")[0];
+	
+	$("#pl li").removeClass("current-song");
+	$("#pl li ").eq(currentSong).addClass("current-song");
+	document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+	var totaltime=Math.round($("#play")[0].duration);
+	var tmin=Math.floor(totaltime/60);
+	var tsec=totaltime % 60;
+	tmin=(tmin<10)?"0"+tmin:tmin;
+	tsec=(tsec<10)?"0"+tsec:tsec;
+	currentTime.textContent+="/"+tmin +":"+tsec;
+	$("#playbutton").click(function(e){
+		if($("#play")[0].paused==false)
+			{
+		$("#play")[0].pause();
+		$("#playbutton").removeClass("button--active");   
+			}
+		else
+			{
+			$("#play")[0].play();
+			$("#playbutton").addClass("button--active");     
+			history($("#pl li #al").eq(currentSong).text().trim());
+			}
+	});
+	$("#backbutton").click(function(e){
+		if(currentSong!=0)
+			{
+			currentSong=currentSong-1;
+			$("#pl li").removeClass("current-song");
+			$("#pl li ").eq(currentSong).addClass("current-song");
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+			$("#playbutton").addClass("button--active");     
+			$("#pl li ")[currentSong].scrollIntoView();
+			history($("#pl li #al").eq(currentSong).text().trim());
+				}
+			
+	});
+	$("#nextbutton").click(function(e){
+		
+		if(currentSong!=$("#pl li #al").length-1)
+			{
+			
+			currentSong++;
+			$("#pl li").removeClass("current-song");
+			$("#pl li ").eq(currentSong).addClass("current-song");
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+			$("#playbutton").addClass("button--active");     
+			$("#pl li ")[currentSong].scrollIntoView();
+			history($("#pl li #al").eq(currentSong).text().trim());
+			
+				}
+			
+	});
+	$("#play")[0].addEventListener("timeupdate", function(){
+		var posi=$("#play")[0].currentTime/$("#play")[0].duration;
+	
+		bar.style.width=posi*100+'%';
+		convertTime(Math.round($("#play")[0].currentTime));
+	});
+	function convertTime(seconds)
+	{
+		var min=Math.floor(seconds/60);
+		var sec=seconds % 60;
+		min=(min<10)?"0"+min:min;
+		sec=(sec<10)?"0"+sec:sec;
+		currentTime.textContent=min +":"+sec;
+		var totaltime=Math.round($("#play")[0].duration);
+		var tmin=Math.floor(totaltime/60);
+		var tsec=totaltime % 60;
+		tmin=(tmin<10)?"0"+tmin:tmin;
+		tsec=(tsec<10)?"0"+tsec:tsec;
+		currentTime.textContent+="/"+tmin +":"+tsec;
+		
+	}
+	$("#pl li #al").click(function(e){
+		e.preventDefault();
+		$("#play")[0].src=this;
+		$("#play")[0].play();
+		$("#pl li").removeClass("current-song");
+		currentSong=$("#pl li #al").index(this);
+		$(this).parent().addClass("current-song");
+		$("#playbutton").addClass("button--active");     
+		document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+		history($("#pl li #al").eq(currentSong).text().trim());
+	});
+	$("#play")[0].addEventListener("ended", function(){
+		if($("#repeat").hasClass("green"))
+			{
+			$("#play")[0].src=$("#pl li #al")[currentSong].href;
+			$("#play")[0].play();
+			}
+		else if($("#shuffle").hasClass("green"))
+		{
+		currentSong=Math.floor((Math.random() * $("#pl li #al").length-1) + 1);
+		$("#pl li").removeClass("current-song");
+		$("#pl li ").eq(currentSong).addClass("current-song");
+		document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+		$("#play")[0].src=$("#pl li #al")[currentSong].href;
+		$("#play")[0].play();
+		$("#pl li ")[currentSong].scrollIntoView();
+		history($("#pl li #al").eq(currentSong).text().trim());
+		}
+		else
+			{
+		currentSong++;
+		if(currentSong == $("#pl li #al").length)
+			{
+			currentSong=0;
+			}
+		
+		$("#pl li").removeClass("current-song");
+		$("#pl li ").eq(currentSong).addClass("current-song");
+		$("#play")[0].src=$("#pl li #al")[currentSong].href;
+		$("#play")[0].play();
+		document.getElementById("songname").innerHTML = $("#pl li #al").eq(currentSong).text().trim();
+		$("#pl li ")[currentSong].scrollIntoView();
+		history($("#pl li #al").eq(currentSong).text().trim());
+			}
+		});
+	Bar  = document.getElementById('pb');
+	Bar.addEventListener("click", seek);
+
+	function seek(e) {
+	var percent1 = e.offsetX / this.offsetWidth;
+	$("#play")[0].currentTime=percent1*$("#play")[0].duration;
+	var posi=$("#play")[0].currentTime/$("#play")[0].duration;
+	
+	bar.style.width=posi*100+'%';
+	}
+	}
+$(document).ready(function(){
+	$.ajax({
+		type : "GET",
+		url : "/getuserfav",
+		dataType : "json"
+  
+		}).done(function(userfavorite){
+			for(var ind=0;ind<$("#pl li ").length;ind++)
+				{
+				var lst=$("#pl li #al").eq(ind).text().trim() ;
+				for(var jind=0;jind<userfavorite.length;jind++)
+					{
+					var song=userfavorite[jind];
+					song.songName;
+					if(lst==song.songName)
+						{
+						$("#pl li #btn").eq(ind).removeClass("far");
+						$("#pl li #btn").eq(ind).addClass("fas");
+						break;
+						}
+					}
+				}
+			})
+
+	
+			
+	
+});
+$("#pl li #btn").click(function(e){
+var currentlike=$("#pl li #btn").index(this);
+if($("#pl li #btn").eq(currentlike).hasClass("far"))
+{
+	
+	$(this).removeClass("far");
+	$(this).addClass("fas");
+
+} else
+{
+	$(this).removeClass("fas");
+	$(this).addClass("far");
+}
+});
+function userSelectFavorite(id)
+{
+	$.ajax({
+		type : "GET",
+		url : "/userFavorite/"+id
+		
+});
+	 
+}
+function toggleSidebar(){
+
+	   document.getElementById("sidebar").classList.toggle('active');
+
+	  }
+function history(song)
+{
+	$.ajax({
+		type : "GET",
+		url : "/storehistory/"+song
+	});
+	}
+	 $("#myInput").on("keyup", function() {
+		    var value = $(this).val().toLowerCase();
+		    $("#pl li").filter(function() {
+		      $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+		    });
+		  });
+	 $(".repeat").click(function () {
+		  
+		   $(this).toggleClass("green");
+
+		});
+	 $(".shuffle").click(function(){
+		 $(this).toggleClass("green");	}
+		 );
+
+</script>
+</body>
+</html>

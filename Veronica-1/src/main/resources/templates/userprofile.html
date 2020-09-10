@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<title>Profile</title>
+	<style type="text/css">
+		@import "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css";
+
+body{
+	margin: 0;
+	padding: 0;
+background-color:black;
+color: green;
+}
+
+.login-box
+{
+	width:280px;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%,-50%);
+	margin-top:8%
+}
+ h1{
+	font-family:Comic Sans MS;
+	font-size: 40px;
+	padding: 3px 0;
+	text-align: center;
+	margin-top: 5%; 
+}
+#details{
+	width:100%;
+	overflow: hidden;
+	font-size: 20px;
+	padding: 0px 0;
+	margin:8px 0;
+	margin-bottom: 30px;
+	text-align: center;
+
+	
+}
+#img
+{
+
+	width: 70%;
+	margin-top: -80%;
+	margin-left: 18%;
+	margin-bottom: -20%; 
+
+}
+#home 
+{
+margin-left:0;
+margin-top:-10%;
+}
+#home a
+{
+color:green;
+font-size:25px;
+text-decoration:none;
+}
+
+
+
+
+
+ 
+	</style>
+</head>
+<body>
+
+	<h1>Veronica</h1>
+	
+	<div id="home"><a href="/player">Go Home</a></div>
+	<div class="login-box">
+		<img src="logo1.jpg" id="img">
+	<div class="textbox">
+		          <div id="details" th:text="${user.name}"></div>
+</div>
+<div class="textbox">
+		            <div id="details" th:text="${user.emailid}"></div>
+</div>
+
+
+</div>
+</body>
+</html>
